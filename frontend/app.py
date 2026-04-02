@@ -354,11 +354,11 @@ with tab3:
         with col1:
             smtp_server = st.text_input("SMTP Sunucu", value="smtp.gmail.com", help="Örnek: smtp.gmail.com, smtp.office365.com")
             smtp_port = st.number_input("SMTP Port", value=587, help="Genelde 587 (TLS) veya 465 (SSL)")
-            smtp_user = st.text_input("SMTP Kullanıcı (E-posta)", value="1tetrahavva@gmail.com")
+            smtp_user = st.text_input("SMTP Kullanıcı (E-posta)", value="kullanacaginizmail@gmail.com")
         
         with col2:
             smtp_password = st.text_input("SMTP Şifre / Uygulama Şifresi", type="password", help="Gmail için uygulama şifresi kullanın")
-            alert_emails = st.text_input("Bildirim Alacak E-postalar", value="1tetrahavva@gmail.com", help="Virgülle ayırarak birden fazla yazabilirsiniz")
+            alert_emails = st.text_input("Bildirim Alacak E-postalar", value="kullanacaginizmail@gmail.com", help="Virgülle ayırarak birden fazla yazabilirsiniz")
         
         if st.button("💾 SMTP Ayarlarını Kaydet", type="primary"):
             # .env dosyasını güncelle
