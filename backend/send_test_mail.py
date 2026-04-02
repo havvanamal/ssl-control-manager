@@ -9,9 +9,9 @@ from notifier import Notifier
 # Mail ayarları
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
-SMTP_USER = "1tetrahavva@gmail.com"
-SMTP_PASSWORD = "vgtf sjgw dodt lytd"  # Kendi uygulama şifreniz
-ALERT_EMAILS = ["havvanamal14@gmail.com"]
+SMTP_USER = "kullanacaginiz.mail.com"
+SMTP_PASSWORD = ""  # Kendi uygulama şifreniz
+ALERT_EMAILS = ["kullanacaginiz.mail.com"]
 
 # Notifier'ı başlat
 notifier = Notifier(SMTP_SERVER, SMTP_PORT, SMTP_USER, SMTP_PASSWORD)
