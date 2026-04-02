@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 from datetime import datetime
 import time
 import traceback
+import os
 
 st.set_page_config(
     page_title="SSL Yönetim Sistemi",
@@ -12,10 +13,11 @@ st.set_page_config(
     layout="wide"
 )
 
-# API URL - DOĞRUDAN LOCALHOST
-API_URL = "http://localhost:9000"
 
-# Debug için göster
+API_URL = os.getenv("BACKEND_URL", "http://localhost:9000")
+
+
+
 st.sidebar.write(f"🔗 API URL: {API_URL}")
 
 st.title("🔒 SSL Sertifika Yönetim ve Takip Sistemi")
@@ -58,7 +60,7 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # BUTON 2: Belirli domaini yenile (sertifika tablosunda olacak)
+    # BUTON 2
     st.subheader("🔧 Domain İşlemleri")
     
     # Domain seçme (domain listesinden)

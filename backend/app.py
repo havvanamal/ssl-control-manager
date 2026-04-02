@@ -37,26 +37,26 @@ def check_and_renew():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Başlangıç
+    
     logger.info("SSL Manager API başlatılıyor...")
     
-    # Zamanlayıcıyı başlat
+
     scheduler.add_job(check_and_renew, 'interval', hours=config.CHECK_INTERVAL_HOURS)
     scheduler.start()
     logger.info(f"Zamanlayıcı başlatıldı (her {config.CHECK_INTERVAL_HOURS} saat)")
     
-    # İlk kontrolü yap
+
     check_and_renew()
     
     yield
     
-    # Kapanış
+
     scheduler.shutdown()
     logger.info("SSL Manager API kapatılıyor")
 
 app = FastAPI(title="SSL Manager API", version="1.0.0", lifespan=lifespan)
 
-# CORS
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
