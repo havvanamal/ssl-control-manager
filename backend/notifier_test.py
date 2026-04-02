@@ -4,9 +4,9 @@ from email.mime.text import MIMEText
 # Mail ayarları
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
-SMTP_USER = "1tetrahavva@gmail.com"
+SMTP_USER = "kulanacaginiz.mail.com"
 SMTP_PASSWORD = "uygulama_sifreniz"  # Uygulama şifreniz
-TO_EMAIL = "havvanamal14@gmail.com"
+TO_EMAIL = "kullanacaginiz.mail.com"
 
 print("=" * 50)
 print("Basit Mail Testi")
