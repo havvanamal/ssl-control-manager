@@ -1,0 +1,31 @@
+[
+    {
+        "domain": "google.com",
+        "type": "linux",
+        "server": "192.168.1.100",
+        "ssh_user": "root",
+        "service": "nginx"
+    },
+    {
+        "domain": "github.com",
+        "type": "linux",
+        "server": "192.168.1.101",
+        "ssh_user": "root",
+        "service": "nginx"
+    },
+    {
+        "domain": "microsoft.com",
+        "type": "linux",
+        "server": "192.168.1.102",
+        "ssh_user": "root",
+        "service": "nginx"
+    },
+    {
+        "domain": "intetra.com.tr",
+        "type": "linux",
+        "server": "127.0.0.1",
+        "ssh_user": "root",
+        "service": "nginx",
+        "auto_renew": true
+    }
+]
