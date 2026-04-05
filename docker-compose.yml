@@ -14,6 +14,7 @@ services:
       - ALERT_EMAILS=${ALERT_EMAILS:-}
       - RENEW_DAYS_BEFORE=${RENEW_DAYS_BEFORE:-30}
       - CHECK_INTERVAL_HOURS=${CHECK_INTERVAL_HOURS:-6}
+      - TZ=Europe/Istanbul
     networks:
       - ssl-network
     restart: unless-stopped
@@ -25,6 +26,7 @@ services:
       - "8502:8502"
     environment:
       - BACKEND_URL=http://backend:8000
+      - TZ=Europe/Istanbul
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
