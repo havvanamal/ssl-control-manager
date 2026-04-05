@@ -345,6 +345,15 @@ with tab2:
 with tab3:
     st.header("⚙️ Sistem Ayarları")
     
+    # Settings fetching
+    current_settings = {}
+    try:
+        resp = requests.get(f"{API_URL}/api/settings", timeout=3)
+        if resp.status_code == 200:
+            current_settings = resp.json()
+    except:
+        pass
+
     # 1. Bölüm: SMTP Ayarları (E-posta Bildirimleri)
     st.subheader("📧 E-posta Bildirim Ayarları")
     
@@ -352,29 +361,28 @@ with tab3:
         col1, col2 = st.columns(2)
         
         with col1:
-            smtp_server = st.text_input("SMTP Sunucu", value="smtp.gmail.com", help="Örnek: smtp.gmail.com, smtp.office365.com")
-            smtp_port = st.number_input("SMTP Port", value=587, help="Genelde 587 (TLS) veya 465 (SSL)")
-            smtp_user = st.text_input("SMTP Kullanıcı (E-posta)", value="kullanacaginizmail@gmail.com")
+            smtp_server = st.text_input("SMTP Sunucu", value=current_settings.get("SMTP_SERVER", "smtp.gmail.com"), help="Örnek: smtp.gmail.com, smtp.office365.com")
+            smtp_port = st.number_input("SMTP Port", value=int(current_settings.get("SMTP_PORT", 587)), help="Genelde 587 (TLS) veya 465 (SSL)")
+            smtp_user = st.text_input("SMTP Kullanıcı (E-posta)", value=current_settings.get("SMTP_USER", ""))
         
         with col2:
-            smtp_password = st.text_input("SMTP Şifre / Uygulama Şifresi", type="password", help="Gmail için uygulama şifresi kullanın")
-            alert_emails = st.text_input("Bildirim Alacak E-postalar", value="kullanacaginizmail@gmail.com", help="Virgülle ayırarak birden fazla yazabilirsiniz")
+            smtp_password = st.text_input("SMTP Şifre / Uygulama Şifresi", value=current_settings.get("SMTP_PASSWORD", ""), type="password", help="Gmail için uygulama şifresi kullanın")
+            alert_emails = st.text_input("Bildirim Alacak E-postalar", value=current_settings.get("ALERT_EMAILS", ""), help="Virgülle ayırarak birden fazla yazabilirsiniz")
         
         if st.button("💾 SMTP Ayarlarını Kaydet", type="primary"):
-            # .env dosyasını güncelle
-            env_content = f"""SMTP_SERVER={smtp_server}
-SMTP_PORT={smtp_port}
-SMTP_USER={smtp_user}
-SMTP_PASSWORD={smtp_password}
-ALERT_EMAILS={alert_emails}
-RENEW_DAYS_BEFORE=30
-CHECK_INTERVAL_HOURS=6
-"""
             try:
-                with open(".env", "w") as f:
-                    f.write(env_content)
-                st.success("✅ SMTP ayarları kaydedildi! Backend'i yeniden başlatın.")
-                st.info("Backend'i yeniden başlatmak için: docker-compose restart backend")
+                payload = {
+                    "SMTP_SERVER": smtp_server,
+                    "SMTP_PORT": smtp_port,
+                    "SMTP_USER": smtp_user,
+                    "SMTP_PASSWORD": smtp_password,
+                    "ALERT_EMAILS": alert_emails
+                }
+                response = requests.post(f"{API_URL}/api/settings", json=payload, timeout=5)
+                if response.status_code == 200:
+                    st.success("✅ SMTP ayarları API'ye kaydedildi!")
+                else:
+                    st.error("❌ Ayarlar kaydedilemedi.")
             except Exception as e:
                 st.error(f"❌ Kaydedilemedi: {str(e)}")
     
@@ -385,26 +393,46 @@ CHECK_INTERVAL_HOURS=6
         col1, col2 = st.columns(2)
         
         with col1:
+            # slider expects int
+            renew_val = int(current_settings.get("RENEW_DAYS_BEFORE", 30))
+            if renew_val < 7: renew_val = 7
+            if renew_val > 90: renew_val = 90
             renew_days_before = st.slider(
                 "Yenileme Tetikleme Günü",
                 min_value=7,
                 max_value=90,
-                value=30,
+                value=renew_val,
                 help="Sertifika bitimine kaç gün kala otomatik yenileme başlatılsın"
             )
         
         with col2:
+            interval_options = [1, 3, 6, 12, 24]
+            current_interval = int(current_settings.get("CHECK_INTERVAL_HOURS", 6))
+            if current_interval not in interval_options:
+                interval_options.append(current_interval)
+            
             check_interval = st.selectbox(
                 "Kontrol Aralığı (Saat)",
-                options=[1, 3, 6, 12, 24],
-                index=2,
+                options=sorted(interval_options),
+                index=sorted(interval_options).index(current_interval),
                 help="SSL sertifikaları kaç saatte bir kontrol edilsin"
             )
         
-        st.info(f"📋 Mevcut ayarlar: {renew_days_before} gün kala yenileme başlatılacak, her {check_interval} saatte bir kontrol yapılacak.")
+        st.info(f"📋 Mevcut ayarlar: {renew_days_before} gün kala uyarı/yenileme başlatılacak, her {check_interval} saatte bir kontrol yapılacak.")
         
         if st.button("💾 Yenileme Ayarlarını Kaydet"):
-            st.success("✅ Yenileme ayarları kaydedildi!")
+            try:
+                payload = {
+                    "RENEW_DAYS_BEFORE": renew_days_before,
+                    "CHECK_INTERVAL_HOURS": check_interval
+                }
+                response = requests.post(f"{API_URL}/api/settings", json=payload, timeout=5)
+                if response.status_code == 200:
+                    st.success("✅ Yenileme ayarları API'ye kaydedildi!")
+                else:
+                    st.error("❌ Ayarlar kaydedilemedi.")
+            except Exception as e:
+                st.error(f"❌ Kaydedilemedi: {str(e)}")
     
     # 3. Bölüm: Domain Yönetimi
     st.subheader("🌐 Domain Yönetimi")
