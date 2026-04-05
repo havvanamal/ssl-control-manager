@@ -9,6 +9,7 @@ import os
 
 from config import Config
 from ssl_checker import SSLChecker
+from notifier import Notifier
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,6 +22,7 @@ def check_and_renew():
     """SSL kontrollerini yap"""
     logger.info("SSL kontrolleri başlıyor...")
     domains = config.load_domains()
+    settings = config.get_settings()
     
     if not domains:
         logger.warning("Domain listesi boş!")
@@ -28,10 +30,24 @@ def check_and_renew():
     
     results = ssl_checker.check_all_domains(domains)
     
-    # Kritik durumları logla
+    notifier = Notifier(
+        smtp_server=settings.get("SMTP_SERVER"),
+        smtp_port=settings.get("SMTP_PORT"),
+        smtp_user=settings.get("SMTP_USER"),
+        smtp_password=settings.get("SMTP_PASSWORD")
+    )
+    
+    alert_emails = settings.get("ALERT_EMAILS", "").split(",") if settings.get("ALERT_EMAILS") else []
+    alert_emails = [e.strip() for e in alert_emails if e.strip()]
+    
+    # Kritik durumları logla ve e-posta at
     for cert in results:
         if cert.get('status') in ['critical', 'warning']:
             logger.warning(f"{cert['domain']}: {cert['status']} - {cert.get('days_left', 0)} gün kaldı")
+            if alert_emails and settings.get("SMTP_SERVER"):
+                # send_alert try/except is handled internally in Notifier, wait, send_alert has no return false directly but sends email
+                # actually send_alert returns None implicitly, but send_email returns True/False
+                notifier.send_alert(cert, alert_emails)
         elif cert.get('error'):
             logger.error(f"{cert['domain']}: {cert['error']}")
 
@@ -41,9 +57,11 @@ async def lifespan(app: FastAPI):
     logger.info("SSL Manager API başlatılıyor...")
     
 
-    scheduler.add_job(check_and_renew, 'interval', hours=config.CHECK_INTERVAL_HOURS)
+    settings = config.get_settings()
+    interval = settings.get('CHECK_INTERVAL_HOURS', 6)
+    scheduler.add_job(check_and_renew, 'interval', hours=interval)
     scheduler.start()
-    logger.info(f"Zamanlayıcı başlatıldı (her {config.CHECK_INTERVAL_HOURS} saat)")
+    logger.info(f"Zamanlayıcı başlatıldı (her {interval} saat)")
     
 
     check_and_renew()
@@ -113,3 +131,47 @@ async def check_now():
 async def health_check():
     """Sağlık kontrolü"""
     return {"status": "healthy", "domains_count": len(config.load_domains())}
+
+@app.get("/api/settings")
+async def get_settings():
+    """Ayarları getir"""
+    return config.get_settings()
+
+@app.post("/api/settings")
+async def save_settings(settings: dict):
+    """Ayarları kaydet"""
+    config.save_settings(settings)
+    return {"message": "Ayarlar kaydedildi"}
+
+@app.get("/api/test/warning")
+async def send_test_warning():
+    """Test uyarısı gönder (Sahte data ile)"""
+    settings = config.get_settings()
+    notifier = Notifier(
+        smtp_server=settings.get("SMTP_SERVER"),
+        smtp_port=settings.get("SMTP_PORT"),
+        smtp_user=settings.get("SMTP_USER"),
+        smtp_password=settings.get("SMTP_PASSWORD")
+    )
+    alert_emails = settings.get("ALERT_EMAILS", "").split(",") if settings.get("ALERT_EMAILS") else []
+    alert_emails = [e.strip() for e in alert_emails if e.strip()]
+    
+    if not alert_emails or not settings.get("SMTP_SERVER"):
+        return {"error": "SMTP veya Alert Emails eksik."}
+    
+    dummy_cert = {
+        'domain': 'test.example.com',
+        'status': 'critical',
+        'days_left': 5,
+        'not_after': '2030-01-01 00:00:00',
+        'issuer': 'Test Issuer'
+    }
+    # send_alert doesn't throw, calls send_email which catches exceptions
+    notifier.send_alert(dummy_cert, alert_emails)
+    return {"message": "Gönderim talebi işlendi (Logları kontrol edin)"}
+
+@app.post("/api/renew/{domain}")
+async def mock_renew_domain(domain: str):
+    """MOCK: Sertifikayı yenileme simülasyonu"""
+    logger.info(f"{domain} için sahte yenileme işlemi başlatıldı.")
+    return {"message": f"{domain} yenileme simülasyonu başarılı. Gerçek bir SSH işlemi yapılmadı."}
