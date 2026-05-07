@@ -1,0 +1,13 @@
+# Data and configuration
+data/
+.env
+
+# Python caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/

@@ -1,0 +1,40 @@
+services:
+  backend:
+    build: ./backend
+    container_name: ssl-backend
+    ports:
+      - "9000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - SMTP_SERVER=${SMTP_SERVER:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - ALERT_EMAILS=${ALERT_EMAILS:-}
+      - RENEW_DAYS_BEFORE=${RENEW_DAYS_BEFORE:-30}
+      - CHECK_INTERVAL_HOURS=${CHECK_INTERVAL_HOURS:-6}
+      - TZ=Europe/Istanbul
+    networks:
+      - ssl-network
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: ssl-frontend
+    ports:
+      - "8502:8502"
+    environment:
+      - BACKEND_URL=http://backend:8000
+      - TZ=Europe/Istanbul
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - backend
+    networks:
+      - ssl-network
+    restart: unless-stopped
+
+networks:
+  ssl-network:
+    driver: bridge

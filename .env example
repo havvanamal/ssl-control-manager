@@ -1,0 +1,10 @@
+# SMTP Ayarları (kendi mail sunucunuzla değiştirin)
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=kullanacaginizmail@gmail.com
+SMTP_PASSWORD=kendi-sifreniz
+ALERT_EMAILS=kullanacaginizmail@gmail.com
+
+# SSL Ayarları
+RENEW_DAYS_BEFORE=30
+CHECK_INTERVAL_HOURS=6
